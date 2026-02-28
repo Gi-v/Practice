@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Carbon Emission Calculator{% endblock %}</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; color: #333; }
+        .navbar {
+            background: #2c7a4b;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            height: 56px;
+        }
+        .navbar h1 { color: #fff; font-size: 1.2rem; flex: 1; }
+        .navbar a {
+            color: #cde8d7;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+        }
+        .navbar a:hover, .navbar a.active { background: #1a5435; color: #fff; }
+        .container { max-width: 1100px; margin: 32px auto; padding: 0 16px; }
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .card h2 { color: #2c7a4b; margin-bottom: 16px; font-size: 1.2rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid #2c7a4b;
+        }
+        .stat-card .value { font-size: 2rem; font-weight: bold; color: #2c7a4b; }
+        .stat-card .label { color: #666; font-size: 0.85rem; margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f5f7fa; color: #555; font-weight: 600; padding: 10px 12px; text-align: left; border-bottom: 2px solid #e0e0e0; }
+        td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; }
+        tr:hover td { background: #fafffe; }
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .btn-primary { background: #2c7a4b; color: #fff; }
+        .btn-primary:hover { background: #1a5435; }
+        .btn-danger { background: #dc3545; color: #fff; }
+        .btn-danger:hover { background: #b02a37; }
+        .btn-sm { padding: 4px 10px; font-size: 0.8rem; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #555; font-size: 0.9rem; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .alert {
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+        }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #e8f5ee;
+            color: #2c7a4b;
+        }
+        .filter-form { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
+        .filter-form .form-group { margin-bottom: 0; flex: 1; min-width: 160px; }
+        .no-data { text-align: center; color: #999; padding: 40px 0; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .section-header h2 { color: #2c7a4b; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <h1>🌿 Carbon Emission Calculator</h1>
+    <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
+    <a href="{% url 'activity' %}" {% if request.resolver_match.url_name == 'activity' %}class="active"{% endif %}>Activity</a>
+    <a href="{% url 'history' %}" {% if request.resolver_match.url_name == 'history' %}class="active"{% endif %}>History</a>
+</nav>
+<div class="container">
+    {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}error{% else %}success{% endif %}">
+            {{ message }}
+        </div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+</div>
+</body>
+</html>

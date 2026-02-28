@@ -1,0 +1,91 @@
+{% extends "emission_app/base.html" %}
+{% block title %}Dashboard - Carbon Emission Calculator{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="value">{{ total_emissions }}</div>
+        <div class="label">Total CO₂ (kg)</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ total_records }}</div>
+        <div class="label">Total Records</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ avg_emission }}</div>
+        <div class="label">Avg per Record (kg CO₂)</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <div class="card">
+        <h2>📊 Emissions Last 7 Days</h2>
+        {% if daily_data %}
+        <table>
+            <thead>
+                <tr><th>Date</th><th>CO₂ (kg)</th></tr>
+            </thead>
+            <tbody>
+                {% for day in daily_data %}
+                <tr>
+                    <td>{{ day.date }}</td>
+                    <td>{{ day.total }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+    <p class="no-data">No data for the last 7 days.</p>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2>🏭 Top Activities by Emissions</h2>
+        {% if top_activities %}
+        <table>
+            <thead>
+                <tr><th>Activity</th><th>Records</th><th>CO₂ (kg)</th></tr>
+            </thead>
+            <tbody>
+                {% for a in top_activities %}
+                <tr>
+                    <td>{{ a.activity__activity_name }}</td>
+                    <td><span class="badge">{{ a.count }}</span></td>
+                    <td>{{ a.total|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="no-data">No activity data yet. <a href="{% url 'activity' %}">Add records</a>.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h2>🕐 Recent Emission Records</h2>
+        <a href="{% url 'history' %}" class="btn btn-primary">View All History</a>
+    </div>
+    {% if recent_records %}
+    <table>
+        <thead>
+            <tr><th>Date</th><th>Activity</th><th>Quantity</th><th>CO₂ (kg)</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            {% for r in recent_records %}
+            <tr>
+                <td>{{ r.date }}</td>
+                <td>{{ r.activity.activity_name }}</td>
+                <td>{{ r.quantity }} {{ r.activity.unit }}</td>
+                <td>{{ r.emission_amount|floatformat:2 }}</td>
+                <td>{{ r.description|default:"-" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="no-data">No records yet. <a href="{% url 'activity' %}">Add your first emission record</a>.</p>
+    {% endif %}
+</div>
+{% endblock %}
