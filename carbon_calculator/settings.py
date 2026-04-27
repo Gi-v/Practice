@@ -63,7 +63,7 @@ WSGI_APPLICATION = 'carbon_calculator.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'carbon_emissions.db',
+        'NAME': BASE_DIR / 'data' / 'carbon_emissions.db',
     }
 }
 
