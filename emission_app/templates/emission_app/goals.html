@@ -125,9 +125,9 @@
 
 <script>
 (function(){
-    const labels  = {{ goal_labels_json }};
-    const targets = {{ goal_targets_json }};
-    const actuals = {{ goal_actuals_json }};
+    const labels  = {{ goal_labels_json|safe }};
+    const targets = {{ goal_targets_json|safe }};
+    const actuals = {{ goal_actuals_json|safe }};
 
     new Chart(document.getElementById('goalsChart'), {
         type: 'bar',

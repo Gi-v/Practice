@@ -80,8 +80,8 @@
 <script>
 (function(){
     // ── 7-day line chart ──
-    const dailyLabels  = {{ daily_labels_json }};
-    const dailyTotals  = {{ daily_totals_json }};
+    const dailyLabels  = {{ daily_labels_json|safe }};
+    const dailyTotals  = {{ daily_totals_json|safe }};
 
     new Chart(document.getElementById('dailyChart'), {
         type: 'line',
@@ -113,8 +113,8 @@
 
     {% if top_activities %}
     // ── Top activities doughnut ──
-    const actLabels = {{ act_labels_json }};
-    const actTotals = {{ act_totals_json }};
+    const actLabels = {{ act_labels_json|safe }};
+    const actTotals = {{ act_totals_json|safe }};
 
     new Chart(document.getElementById('activityDonut'), {
         type: 'doughnut',

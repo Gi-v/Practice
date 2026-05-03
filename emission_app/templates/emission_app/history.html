@@ -117,10 +117,10 @@
     new Chart(document.getElementById('historyLine'), {
         type: 'line',
         data: {
-            labels: {{ chart_dates_json }},
+            labels: {{ chart_dates_json|safe }},
             datasets: [{
                 label: 'CO₂ (kg)',
-                data: {{ chart_totals_json }},
+                data: {{ chart_totals_json|safe }},
                 fill: true,
                 borderColor: '#0d9488',
                 backgroundColor: 'rgba(13,148,136,0.10)',
@@ -146,10 +146,10 @@
     new Chart(document.getElementById('historyPie'), {
         type: 'pie',
         data: {
-            labels: {{ act_labels_json }},
+            labels: {{ act_labels_json|safe }},
             datasets: [{
-                data: {{ act_totals_json }},
-                backgroundColor: {{ act_labels_json }}.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length]),
+                data: {{ act_totals_json|safe }},
+                backgroundColor: {{ act_labels_json|safe }}.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length]),
                 borderWidth: 2,
                 borderColor: '#fff',
                 hoverOffset: 5,

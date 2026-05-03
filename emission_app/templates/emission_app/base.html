@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +8,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="{% static 'emission_app/js/chart.umd.min.js' %}"></script>
+    <script>
+        // Shared chart colour palette used across all pages
+        const CHART_PALETTE = ['#2c8a55','#0d9488','#d97706','#6366f1','#ef4444','#64748b','#10b981','#f59e0b'];
+    </script>
     <style>
         :root {
             --green-dark:   #1a5c38;
@@ -354,9 +359,5 @@
     {% endfor %}
     {% block content %}{% endblock %}
 </div>
-<script>
-    // Shared chart colour palette used across all pages
-    const CHART_PALETTE = ['#2c8a55','#0d9488','#d97706','#6366f1','#ef4444','#64748b','#10b981','#f59e0b'];
-</script>
 </body>
 </html>
