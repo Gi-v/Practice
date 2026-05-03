@@ -2,60 +2,48 @@
 {% block title %}Dashboard - Carbon Emission Calculator{% endblock %}
 
 {% block content %}
+<div class="page-hero">
+    <div>
+        <h1>Dashboard</h1>
+        <p>Your carbon footprint at a glance</p>
+    </div>
+    <span class="hero-icon">🌍</span>
+</div>
+
 <div class="stats-grid">
-    <div class="stat-card">
+    <div class="stat-card green">
+        <span class="stat-icon">☁️</span>
         <div class="value">{{ total_emissions }}</div>
         <div class="label">Total CO₂ (kg)</div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card teal">
+        <span class="stat-icon">📝</span>
         <div class="value">{{ total_records }}</div>
         <div class="label">Total Records</div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card amber">
+        <span class="stat-icon">📈</span>
         <div class="value">{{ avg_emission }}</div>
         <div class="label">Avg per Record (kg CO₂)</div>
     </div>
 </div>
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+<div style="display: grid; grid-template-columns: 3fr 2fr; gap: 24px;">
+    <!-- 7-day line chart -->
     <div class="card">
-        <h2>📊 Emissions Last 7 Days</h2>
-        {% if daily_data %}
-        <table>
-            <thead>
-                <tr><th>Date</th><th>CO₂ (kg)</th></tr>
-            </thead>
-            <tbody>
-                {% for day in daily_data %}
-                <tr>
-                    <td>{{ day.date }}</td>
-                    <td>{{ day.total }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-    <p class="no-data">No data for the last 7 days.</p>
-        {% endif %}
+        <h2>📅 Emissions — Last 7 Days</h2>
+        <div class="chart-wrap" style="height:260px;">
+            <canvas id="dailyChart"></canvas>
+        </div>
     </div>
 
+    <!-- Top activities doughnut -->
     <div class="card">
-        <h2>🏭 Top Activities by Emissions</h2>
+        <h2>🏭 Top Activities</h2>
         {% if top_activities %}
-        <table>
-            <thead>
-                <tr><th>Activity</th><th>Records</th><th>CO₂ (kg)</th></tr>
-            </thead>
-            <tbody>
-                {% for a in top_activities %}
-                <tr>
-                    <td>{{ a.activity__activity_name }}</td>
-                    <td><span class="badge">{{ a.count }}</span></td>
-                    <td>{{ a.total|floatformat:2 }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="chart-wrap" style="height:260px;">
+            <canvas id="activityDonut"></canvas>
+        </div>
         {% else %}
         <p class="no-data">No activity data yet. <a href="{% url 'activity' %}">Add records</a>.</p>
         {% endif %}
@@ -78,8 +66,8 @@
                 <td>{{ r.date }}</td>
                 <td>{{ r.activity.activity_name }}</td>
                 <td>{{ r.quantity }} {{ r.activity.unit }}</td>
-                <td>{{ r.emission_amount|floatformat:2 }}</td>
-                <td>{{ r.description|default:"-" }}</td>
+                <td><strong>{{ r.emission_amount|floatformat:2 }}</strong></td>
+                <td style="color:var(--text-muted)">{{ r.description|default:"-" }}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -88,4 +76,71 @@
     <p class="no-data">No records yet. <a href="{% url 'activity' %}">Add your first emission record</a>.</p>
     {% endif %}
 </div>
+
+<script>
+(function(){
+    // ── 7-day line chart ──
+    const dailyLabels  = {{ daily_labels_json }};
+    const dailyTotals  = {{ daily_totals_json }};
+
+    new Chart(document.getElementById('dailyChart'), {
+        type: 'line',
+        data: {
+            labels: dailyLabels,
+            datasets: [{
+                label: 'CO₂ (kg)',
+                data: dailyTotals,
+                fill: true,
+                borderColor: '#2c8a55',
+                backgroundColor: 'rgba(44,138,85,0.12)',
+                pointBackgroundColor: '#2c8a55',
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                tension: 0.4,
+                borderWidth: 2.5,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: '#f0f4f2' }, ticks: { font: { size: 12 } } },
+                y: { beginAtZero: true, grid: { color: '#f0f4f2' }, ticks: { font: { size: 12 } } }
+            }
+        }
+    });
+
+    {% if top_activities %}
+    // ── Top activities doughnut ──
+    const actLabels = {{ act_labels_json }};
+    const actTotals = {{ act_totals_json }};
+
+    new Chart(document.getElementById('activityDonut'), {
+        type: 'doughnut',
+        data: {
+            labels: actLabels,
+            datasets: [{
+                data: actTotals,
+                backgroundColor: CHART_PALETTE,
+                borderWidth: 2,
+                borderColor: '#fff',
+                hoverOffset: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '62%',
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { font: { size: 12 }, boxWidth: 14, padding: 12 }
+                }
+            }
+        }
+    });
+    {% endif %}
+})();
+</script>
 {% endblock %}

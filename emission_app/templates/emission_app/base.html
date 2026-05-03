@@ -4,114 +4,359 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Carbon Emission Calculator{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <style>
+        :root {
+            --green-dark:   #1a5c38;
+            --green-mid:    #2c8a55;
+            --green-light:  #40c074;
+            --teal:         #0d9488;
+            --bg:           #f0f4f2;
+            --card-bg:      #ffffff;
+            --text:         #1e2d26;
+            --text-muted:   #6b7a72;
+            --border:       #e2e8e4;
+            --shadow-sm:    0 1px 4px rgba(0,0,0,0.07);
+            --shadow-md:    0 4px 20px rgba(0,0,0,0.10);
+            --shadow-lg:    0 8px 32px rgba(0,0,0,0.13);
+            --radius:       12px;
+            --radius-sm:    8px;
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Arial, sans-serif; background: #f0f2f5; color: #333; }
+
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── Navbar ── */
         .navbar {
-            background: #2c7a4b;
-            padding: 0 24px;
+            background: linear-gradient(135deg, #0f3d25 0%, #1a5c38 50%, #0d7a50 100%);
+            padding: 0 32px;
             display: flex;
             align-items: center;
-            height: 56px;
+            height: 64px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        .navbar h1 { color: #fff; font-size: 1.2rem; flex: 1; }
-        .navbar a {
-            color: #cde8d7;
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            text-decoration: none;
+        }
+        .navbar-brand .brand-icon {
+            font-size: 1.6rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+        .navbar-brand .brand-text {
+            color: #fff;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+        .navbar-brand .brand-text span {
+            color: var(--green-light);
+        }
+        .nav-links { display: flex; gap: 4px; }
+        .nav-links a {
+            color: rgba(255,255,255,0.75);
             text-decoration: none;
             padding: 8px 16px;
-            border-radius: 4px;
-            font-size: 0.95rem;
-            transition: background 0.2s;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .navbar a:hover, .navbar a.active { background: #1a5435; color: #fff; }
-        .container { max-width: 1100px; margin: 32px auto; padding: 0 16px; }
+        .nav-links a:hover { background: rgba(255,255,255,0.12); color: #fff; }
+        .nav-links a.active {
+            background: rgba(255,255,255,0.18);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2);
+        }
+
+        /* ── Layout ── */
+        .container { max-width: 1160px; margin: 36px auto; padding: 0 20px; }
+
+        /* ── Cards ── */
         .card {
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            padding: 24px;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-md);
+            padding: 28px;
             margin-bottom: 24px;
+            border: 1px solid var(--border);
+            transition: box-shadow 0.2s;
         }
-        .card h2 { color: #2c7a4b; margin-bottom: 16px; font-size: 1.2rem; }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+        .card:hover { box-shadow: var(--shadow-lg); }
+        .card h2 {
+            color: var(--green-dark);
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ── Stat Cards ── */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 28px; }
         .stat-card {
-            background: #fff;
-            border-radius: 8px;
-            padding: 20px;
+            border-radius: var(--radius);
+            padding: 24px 20px;
             text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border-left: 4px solid #2c7a4b;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-        .stat-card .value { font-size: 2rem; font-weight: bold; color: #2c7a4b; }
-        .stat-card .label { color: #666; font-size: 0.85rem; margin-top: 4px; }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+        .stat-card.green  { background: linear-gradient(135deg, #1a5c38, #2c8a55); color: #fff; }
+        .stat-card.teal   { background: linear-gradient(135deg, #0d6b5e, #0d9488); color: #fff; }
+        .stat-card.amber  { background: linear-gradient(135deg, #92400e, #d97706); color: #fff; }
+        .stat-card .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            display: block;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+        .stat-card .value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -1px;
+        }
+        .stat-card .label {
+            font-size: 0.78rem;
+            margin-top: 6px;
+            opacity: 0.85;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: -20px; right: -20px;
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+        }
+
+        /* ── Tables ── */
         table { width: 100%; border-collapse: collapse; }
-        th { background: #f5f7fa; color: #555; font-weight: 600; padding: 10px 12px; text-align: left; border-bottom: 2px solid #e0e0e0; }
-        td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; }
-        tr:hover td { background: #fafffe; }
+        th {
+            background: linear-gradient(to right, #f3f7f5, #edf2ef);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 11px 14px;
+            text-align: left;
+            border-bottom: 2px solid var(--border);
+        }
+        td { padding: 11px 14px; border-bottom: 1px solid #f2f6f4; font-size: 0.9rem; }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover td { background: #f7faf8; }
+
+        /* ── Buttons ── */
         .btn {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 18px;
+            border-radius: var(--radius-sm);
             border: none;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            font-family: inherit;
             text-decoration: none;
-            transition: background 0.2s;
+            transition: all 0.2s;
         }
-        .btn-primary { background: #2c7a4b; color: #fff; }
-        .btn-primary:hover { background: #1a5435; }
-        .btn-danger { background: #dc3545; color: #fff; }
-        .btn-danger:hover { background: #b02a37; }
-        .btn-sm { padding: 4px 10px; font-size: 0.8rem; }
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #555; font-size: 0.9rem; }
-        .form-group input, .form-group select, .form-group textarea {
+        .btn-primary {
+            background: linear-gradient(135deg, var(--green-mid), var(--green-dark));
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(44,138,85,0.35);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--green-dark), #0f3d25);
+            box-shadow: 0 4px 14px rgba(44,138,85,0.45);
+            transform: translateY(-1px);
+            color: #fff;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+            color: #fff;
+            box-shadow: 0 2px 6px rgba(239,68,68,0.3);
+        }
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background: #f1f5f2;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { background: var(--border); color: var(--text); }
+        .btn-sm { padding: 5px 12px; font-size: 0.8rem; }
+
+        /* ── Forms ── */
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.85rem;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
             width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
             font-size: 0.9rem;
+            font-family: inherit;
+            color: var(--text);
+            background: #fafcfb;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--green-mid);
+            box-shadow: 0 0 0 3px rgba(44,138,85,0.12);
+            background: #fff;
         }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        /* ── Alerts ── */
         .alert {
-            padding: 12px 16px;
-            border-radius: 4px;
-            margin-bottom: 16px;
+            padding: 13px 18px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 20px;
             font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        /* ── Badge ── */
         .badge {
             display: inline-block;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: #e8f5ee;
-            color: #2c7a4b;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            background: #d1fae5;
+            color: #065f46;
+            letter-spacing: 0.3px;
         }
-        .filter-form { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
+        .badge-amber { background: #fef3c7; color: #92400e; }
+        .badge-blue  { background: #dbeafe; color: #1e40af; }
+
+        /* ── Filter bar ── */
+        .filter-form { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; }
         .filter-form .form-group { margin-bottom: 0; flex: 1; min-width: 160px; }
-        .no-data { text-align: center; color: #999; padding: 40px 0; }
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .section-header h2 { color: #2c7a4b; font-size: 1.2rem; }
+
+        /* ── Misc ── */
+        .no-data { text-align: center; color: var(--text-muted); padding: 48px 0; font-size: 0.95rem; }
+        .no-data a { color: var(--green-mid); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section-header h2 { color: var(--green-dark); font-size: 1.1rem; font-weight: 700; }
+
+        /* ── Chart container ── */
+        .chart-wrap { position: relative; width: 100%; }
+
+        /* ── Page hero banner ── */
+        .page-hero {
+            background: linear-gradient(135deg, #0f3d25 0%, #1a5c38 60%, #0d9488 100%);
+            border-radius: var(--radius);
+            padding: 28px 32px;
+            margin-bottom: 28px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-lg);
+        }
+        .page-hero h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; }
+        .page-hero p  { opacity: 0.8; font-size: 0.92rem; }
+        .page-hero .hero-icon { font-size: 3.5rem; opacity: 0.7; }
+
+        /* ── Progress bar ── */
+        .progress-wrap { background: #e5e7eb; border-radius: 999px; height: 10px; overflow: hidden; }
+        .progress-bar  {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(to right, var(--green-light), var(--green-mid));
+            transition: width 0.6s ease;
+        }
+        .progress-bar.over { background: linear-gradient(to right, #f59e0b, #ef4444); }
+
+        /* ── Animations ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .card, .stat-card, .page-hero { animation: fadeUp 0.4s ease both; }
+        .stat-card:nth-child(2) { animation-delay: 0.06s; }
+        .stat-card:nth-child(3) { animation-delay: 0.12s; }
     </style>
 </head>
 <body>
 <nav class="navbar">
-    <h1>🌿 Carbon Emission Calculator</h1>
-    <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
-    <a href="{% url 'activity' %}" {% if request.resolver_match.url_name == 'activity' %}class="active"{% endif %}>Activity</a>
-    <a href="{% url 'history' %}" {% if request.resolver_match.url_name == 'history' %}class="active"{% endif %}>History</a>
-    <a href="{% url 'goals' %}" {% if request.resolver_match.url_name == 'goals' %}class="active"{% endif %}>Goals</a>
+    <a href="{% url 'dashboard' %}" class="navbar-brand">
+        <span class="brand-icon">🌿</span>
+        <span class="brand-text">Carbon<span>Track</span></span>
+    </a>
+    <div class="nav-links">
+        <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>📊 Dashboard</a>
+        <a href="{% url 'activity' %}"  {% if request.resolver_match.url_name == 'activity'  %}class="active"{% endif %}>⚡ Activity</a>
+        <a href="{% url 'history' %}"   {% if request.resolver_match.url_name == 'history'   %}class="active"{% endif %}>📜 History</a>
+        <a href="{% url 'goals' %}"     {% if request.resolver_match.url_name == 'goals'     %}class="active"{% endif %}>🎯 Goals</a>
+    </div>
 </nav>
 <div class="container">
     {% for message in messages %}
         <div class="alert alert-{% if message.tags == 'error' %}error{% else %}success{% endif %}">
-            {{ message }}
+            {% if message.tags == 'error' %}⚠️{% else %}✅{% endif %} {{ message }}
         </div>
     {% endfor %}
     {% block content %}{% endblock %}
 </div>
+<script>
+    // Shared chart colour palette used across all pages
+    const CHART_PALETTE = ['#2c8a55','#0d9488','#d97706','#6366f1','#ef4444','#64748b','#10b981','#f59e0b'];
+</script>
 </body>
 </html>
