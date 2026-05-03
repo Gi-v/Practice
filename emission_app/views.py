@@ -3,6 +3,7 @@ Views for the carbon emission tracking application.
 Dashboard, Activity, and History sections.
 """
 
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.db.models import Sum, Count, Avg
@@ -50,6 +51,10 @@ def dashboard(request):
         'top_activities': top_activities,
         'recent_records': recent_records,
         'daily_data': daily_data,
+        'daily_labels_json': json.dumps([d['date'] for d in daily_data]),
+        'daily_totals_json': json.dumps([d['total'] for d in daily_data]),
+        'act_labels_json': json.dumps([a['activity__activity_name'] for a in top_activities]),
+        'act_totals_json': json.dumps([round(a['total'], 2) for a in top_activities]),
     }
     return render(request, 'emission_app/dashboard.html', context)
 
@@ -131,6 +136,26 @@ def history(request):
 
     activity_types = ActivityType.objects.order_by('activity_name')
 
+    # Aggregate daily totals for the chart (from filtered queryset)
+    daily_agg = (
+        records
+        .values('date')
+        .annotate(total=Sum('emission_amount'))
+        .order_by('date')
+    )
+    chart_dates = [str(row['date']) for row in daily_agg]
+    chart_totals = [round(row['total'], 2) for row in daily_agg]
+
+    # Emissions by activity for the filtered period
+    by_activity = (
+        records
+        .values('activity__activity_name')
+        .annotate(total=Sum('emission_amount'))
+        .order_by('-total')
+    )
+    act_labels = [row['activity__activity_name'] for row in by_activity]
+    act_totals = [round(row['total'], 2) for row in by_activity]
+
     context = {
         'records': records,
         'total_filtered': round(total_filtered, 2),
@@ -138,6 +163,14 @@ def history(request):
         'activity_filter': activity_filter,
         'start_date': start_date,
         'end_date': end_date,
+        'chart_dates': chart_dates,
+        'chart_totals': chart_totals,
+        'act_labels': act_labels,
+        'act_totals': act_totals,
+        'chart_dates_json': json.dumps(chart_dates),
+        'chart_totals_json': json.dumps(chart_totals),
+        'act_labels_json': json.dumps(act_labels),
+        'act_totals_json': json.dumps(act_totals),
     }
     return render(request, 'emission_app/history.html', context)
 
@@ -189,9 +222,52 @@ def goals(request):
 
     all_goals = EmissionGoal.objects.all()
 
+    # Calculate actual emissions for each goal's current period window
+    today = date.today()
+    goals_with_progress = []
+    for goal in all_goals:
+        # Determine the measurement window for this period
+        if goal.period == 'daily':
+            window_start = today
+            window_end = today
+        elif goal.period == 'weekly':
+            # weekday() returns 0 for Monday … 6 for Sunday, so subtract to get Monday
+            window_start = today - timedelta(days=today.weekday())
+            window_end = window_start + timedelta(days=6)
+        else:  # monthly
+            window_start = today.replace(day=1)
+            # last day of current month
+            if today.month == 12:
+                window_end = today.replace(month=12, day=31)
+            else:
+                window_end = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
+
+        actual = EmissionRecord.objects.filter(
+            date__gte=window_start,
+            date__lte=window_end,
+        ).aggregate(total=Sum('emission_amount'))['total'] or 0.0
+        actual = round(actual, 2)
+
+        # Cap at 200 % to avoid extreme bar distortion when actuals far exceed target
+        pct = min(round((actual / goal.target_emission) * 100, 1), 200) if goal.target_emission else 0
+        goals_with_progress.append({
+            'goal': goal,
+            'actual': actual,
+            'pct': pct,
+            'over_target': actual > goal.target_emission,
+        })
+
+    # Bar chart data: target vs actual per goal
+    goal_labels = [g['goal'].title for g in goals_with_progress]
+    goal_targets = [g['goal'].target_emission for g in goals_with_progress]
+    goal_actuals = [g['actual'] for g in goals_with_progress]
+
     context = {
-        'goals': all_goals,
-        'today': date.today(),
+        'goals_with_progress': goals_with_progress,
+        'today': today,
         'period_choices': EmissionGoal.PERIOD_CHOICES,
+        'goal_labels_json': json.dumps(goal_labels),
+        'goal_targets_json': json.dumps(goal_targets),
+        'goal_actuals_json': json.dumps(goal_actuals),
     }
     return render(request, 'emission_app/goals.html', context)

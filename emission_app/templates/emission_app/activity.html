@@ -2,6 +2,14 @@
 {% block title %}Activity - Carbon Emission Calculator{% endblock %}
 
 {% block content %}
+<div class="page-hero">
+    <div>
+        <h1>Activity Tracker</h1>
+        <p>Log emission records and manage activity types</p>
+    </div>
+    <span class="hero-icon">⚡</span>
+</div>
+
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
     <div class="card">
         <h2>➕ Add Emission Record</h2>
@@ -11,7 +19,7 @@
             <div class="form-group">
                 <label>Activity Type</label>
                 <select name="activity_id" required>
-                    <option value="">-- Select activity --</option>
+                    <option value="">— Select activity —</option>
                     {% for a in activity_types %}
                     <option value="{{ a.id }}">{{ a.activity_name }} ({{ a.emission_factor }} kg CO₂/{{ a.unit }})</option>
                     {% endfor %}
@@ -28,10 +36,10 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Description (optional)</label>
+                <label>Description <small style="color:var(--text-muted);font-weight:400">(optional)</small></label>
                 <textarea name="description" rows="2" placeholder="e.g. Commute to office"></textarea>
             </div>
-            <button type="submit" class="btn btn-primary">Add Record</button>
+            <button type="submit" class="btn btn-primary">➕ Add Record</button>
         </form>
     </div>
 
@@ -54,10 +62,19 @@
                     <input type="text" name="unit" placeholder="e.g. km, kWh, kg" required>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Add Activity Type</button>
+            <button type="submit" class="btn btn-primary">➕ Add Activity Type</button>
         </form>
     </div>
 </div>
+
+{% if activity_types %}
+<div class="card">
+    <h2>📊 Emissions by Activity Type</h2>
+    <div class="chart-wrap" style="height:260px;">
+        <canvas id="activityBar"></canvas>
+    </div>
+</div>
+{% endif %}
 
 <div class="card">
     <h2>📋 Available Activity Types</h2>
@@ -75,11 +92,11 @@
         <tbody>
             {% for a in activity_types %}
             <tr>
-                <td>{{ a.activity_name }}</td>
+                <td><strong>{{ a.activity_name }}</strong></td>
                 <td>{{ a.emission_factor }}</td>
-                <td>{{ a.unit }}</td>
+                <td><span class="badge badge-blue">{{ a.unit }}</span></td>
                 <td><span class="badge">{{ a.record_count }}</span></td>
-                <td>{{ a.total_emissions|floatformat:2|default:"0.00" }}</td>
+                <td><strong>{{ a.total_emissions|floatformat:2|default:"0.00" }}</strong></td>
             </tr>
             {% endfor %}
         </tbody>
@@ -88,4 +105,37 @@
     <p class="no-data">No activity types yet. Add one above to get started.</p>
     {% endif %}
 </div>
+
+{% if activity_types %}
+<script>
+(function(){
+    const labels = [{% for a in activity_types %}"{{ a.activity_name }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+    const totals = [{% for a in activity_types %}{{ a.total_emissions|floatformat:2|default:"0" }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+    new Chart(document.getElementById('activityBar'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Total CO₂ (kg)',
+                data: totals,
+                backgroundColor: labels.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length] + 'cc'),
+                borderColor:     labels.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length]),
+                borderWidth: 1.5,
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 12 } } },
+                y: { beginAtZero: true, grid: { color: '#f0f4f2' }, ticks: { font: { size: 12 } } }
+            }
+        }
+    });
+})();
+</script>
+{% endif %}
 {% endblock %}
